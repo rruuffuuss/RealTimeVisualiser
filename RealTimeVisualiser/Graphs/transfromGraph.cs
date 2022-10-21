@@ -22,7 +22,8 @@ namespace RealTimeVisualiser
 
         public Single[] FFT(Single[] data)
         {
-            return Fourier.ForwardReal(data, data.Length + 2, ToString());
+            //return Fourier.ForwardReal(data, data.Length + 2, ToString());
+            return data;
         }
     }
 }

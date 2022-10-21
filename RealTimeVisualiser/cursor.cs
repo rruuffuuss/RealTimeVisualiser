@@ -7,6 +7,9 @@ using System.Text;
 
 namespace RealTimeVisualiser
 {
+    /// <summary>
+    /// draws custom cursor
+    /// </summary>
     class Cursor : Component
     {
 
@@ -17,10 +20,11 @@ namespace RealTimeVisualiser
         private Texture2D hoverTexture;
 
         private int cursorWidth;
-        private int cursorHeight;
-        
+        private int cursorHeight;   
 
         public bool hovering { get; set; }
+
+
         public Cursor(Texture2D _normal, Texture2D _hover)
         {
             normalTexture = _normal;
@@ -30,7 +34,7 @@ namespace RealTimeVisualiser
             cursorHeight = normalTexture.Height;
         }
 
-
+        //draws the custom cursor at coords of the system cursor, different texture depending on whether cursor is hovering
         public override void Draw(GameTime _gameTime, SpriteBatch _spriteBatch)
         {
             if (Game1.HOVERING)
@@ -40,12 +44,9 @@ namespace RealTimeVisualiser
             else
             {
                 _spriteBatch.Draw(normalTexture, new Rectangle(Game1.CURRENTMOUSE.X - cursorWidth/2, Game1.CURRENTMOUSE.Y - cursorHeight/2, cursorWidth, cursorHeight), Color.White);
-            }
-            
-
-  
-            
+            }        
         }
+
 
         public override void Update(GameTime gameTime)
         {
