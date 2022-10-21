@@ -7,27 +7,30 @@ using System.Diagnostics;
 
 namespace RealTimeVisualiser
 {
+    /// <summary>
+    /// captures the audio samples of any sound currently playing on windows
+    /// </summary>
     public class audioIn
     {
         //int frameLength;
         //List<byte> frameData;
+
         WasapiLoopbackCapture capture;
 
-        private int _bitDepth;
+        // bit depth of audio samples / 8 (32) 
         private int _byteDepth;
-        
-        
 
-        private List<byte> newBytes;
+        // audio data pulled from OS since last frame
         public List<Single> currentData { get; set; }
 
-
         public byte[] invBits;
+
+
         public audioIn(int bitDepth)
         {
             capture = new WasapiLoopbackCapture();
 
-            _bitDepth = capture.WaveFormat.BitsPerSample;
+
             _byteDepth = bitDepth / 8;
 
 
@@ -49,7 +52,9 @@ namespace RealTimeVisualiser
                     //copies 1 sample from the buffer into the _sample byte array
                     Buffer.BlockCopy(a.Buffer, i, _sample,0,_byteDepth);
  
+                    // converts the sample from bytes to a single
                     var _intSample = BitConverter.ToSingle(_sample);                   
+
 
                     currentData.Add(_intSample);
                 }
@@ -66,8 +71,6 @@ namespace RealTimeVisualiser
         }
 
 
-
-
         public void _start()
         {
             capture.StartRecording();
@@ -79,11 +82,8 @@ namespace RealTimeVisualiser
         }
 
         public void dispose()
-        {
-
-            
-            capture.Dispose();
-           
+        {        
+            capture.Dispose();          
         }
         /*
         public byte invertBits(byte _byte)
