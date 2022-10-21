@@ -38,10 +38,10 @@ namespace RealTimeVisualiser
 
 
         private Single inputLen;
-        private Single FFTLen;
+        private int FFTLen;
 
         private List<Single> _audioData;
-        private List<Single> data_to_FFT;
+        private double[] data_to_FFT;
         private double[] freq_data;
 
         private inputGraph _inputGraph;
@@ -107,9 +107,9 @@ namespace RealTimeVisualiser
 
             var fourierInputText = new TextBox(_textboxTexture, SourceHeavy)
             {
-                position = new Vector2(Convert.ToInt32(39 * 1920 / GraphicsDevice.DisplayMode.Width), Convert.ToInt32(129 * 1080 / GraphicsDevice.DisplayMode.Height)),
+                position = new Vector2(Convert.ToInt32(39 * 1920 / GraphicsDevice.DisplayMode.Width), Convert.ToInt32(140 * 1080 / GraphicsDevice.DisplayMode.Height)),
                 text = "",
-                backupText = "enter input length",
+                backupText = "input length",
                 penColour = Color.White
             };
             fourierInputText.click += fourierInputText_Click;
@@ -136,7 +136,7 @@ namespace RealTimeVisualiser
 
             var quitButton = new Button(_buttonTexture, SourceHeavy) // need to add button texture
             {
-                position = new Vector2(39 * 1920 / GraphicsDevice.DisplayMode.Width, 817 * 1080 / GraphicsDevice.DisplayMode.Height - 45),
+                position = new Vector2(39 * 1920 / GraphicsDevice.DisplayMode.Width, 772 * 1080 / GraphicsDevice.DisplayMode.Height),
                 text = "quit",
                 penColour = Color.White
 
@@ -144,12 +144,34 @@ namespace RealTimeVisualiser
 
             quitButton.click += quitButton_Click;
 
+            var moreSamplesButton = new Button(_buttonTexture, SourceHeavy)
+            {
+                position = new Vector2(258 * 1920 / GraphicsDevice.DisplayMode.Width, 189 * 1080 / GraphicsDevice.DisplayMode.Height),
+                text = ">",
+                penColour = Color.White
+
+            };
+
+            moreSamplesButton.click += moreSamplesButton_Click;
+
+            var lessSamplesButton = new Button(_buttonTexture, SourceHeavy)
+            {
+                position = new Vector2(39 * 1920 / GraphicsDevice.DisplayMode.Width, 189 * 1080 / GraphicsDevice.DisplayMode.Height),
+                text = "<",
+                penColour = Color.White
+
+            };
+
+            lessSamplesButton.click += lessSamplesButton_Click;
+
             _gameComponent = new List<Component>()
             {
                 fourierInputText,
                 timeScaleText,
                 randomButton,
                 quitButton,
+                moreSamplesButton,
+                lessSamplesButton
                 
             };
 
@@ -165,9 +187,32 @@ namespace RealTimeVisualiser
             _inputGraph = new inputGraph(sampleRate, new Vector2(Convert.ToInt32(GraphicsDevice.DisplayMode.Width), GraphicsDevice.DisplayMode.Height), whitePixel);
         }
 
+     
+        private void moreSamplesButton_Click(object sender, EventArgs e)
+        {
+            if (GAMESTATE == false)
+            {
+                int n;
+                if (!int.TryParse(_textBoxs[1].text, out n)) _textBoxs[1].text = "512";
+                if (n == 0) n = 512;
+                _textBoxs[1].text = Convert.ToString(n * 2);
+            }
+        }
+
+        private void lessSamplesButton_Click(object sender, EventArgs e)
+        {
+            if (GAMESTATE == false)
+            {
+                int n;
+                if (!int.TryParse(_textBoxs[1].text, out n)) _textBoxs[1].text = "512";
+                if (n == 0) n = 512;
+                if (n > 1) _textBoxs[1].text = Convert.ToString(n / 2);
+            }
+        }
+
         private void fourierInputText_Click(object sender, EventArgs e)
         {
-            if (GAMESTATE == false) currentTextBox = 2;
+            //if (GAMESTATE == false) currentTextBox = 2;
         }
 
         private void timeScaleText_Click(object sender, EventArgs e)
@@ -208,17 +253,17 @@ namespace RealTimeVisualiser
                 if (_textBoxs[0].text == "") _textBoxs[0].text = "1.0";
                 else if (!Single.TryParse(_textBoxs[0].text, out _)) _textBoxs[0].text += ".0";
 
-                if (_textBoxs[1].text == "") _textBoxs[1].text = "0.03";
-                else if (!Single.TryParse(_textBoxs[1].text, out _)) _textBoxs[0].text += ".0";
+                if (_textBoxs[1].text == "") _textBoxs[1].text = "256";
+
+                
 
                 inputLen = Convert.ToSingle(_textBoxs[0].text);
-                FFTLen = Convert.ToSingle(_textBoxs[1].text);
+                FFTLen = Convert.ToInt32(_textBoxs[1].text);
 
                 currentTextBox = 0;
 
-                _audioIn._start();
-
-                
+                _inputGraph.setInputData(inputLen);
+                _audioIn._start();                
             }
             else
             {
@@ -250,14 +295,16 @@ namespace RealTimeVisualiser
 
             if (GAMESTATE == true)
             {
+
                 _audioData = _audioIn.currentData;
+                ////suspect this gap is whats causing grpah irrelugarities
                 _audioIn.currentData = new List<Single>();
 
 
                 if (_audioData != null && _audioData.Count != 0)
                 {
                     //Debug.WriteLine("test2");
-                    data_to_FFT = _inputGraph.Update(gameTime, _audioData, inputLen,FFTLen); //input needs a decimal place bruh or big crash
+                    data_to_FFT = _inputGraph.Update(gameTime, _audioData, FFTLen); //input needs a decimal place bruh or big crash
 
                 }
             }
