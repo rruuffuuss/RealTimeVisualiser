@@ -42,8 +42,9 @@ namespace RealTimeVisualiser
             capture.DataAvailable += (s, a) =>
             {
                 
+         
                 //for loop where i steps through each sample (each sample is multiple bytes)
-                for(int i = 0; i < a.Buffer.Length; i += _byteDepth)
+                for(int i = 0; i < a.BytesRecorded ; i += _byteDepth)
                 {
 
                     //creates new byte array with 4 bytes / 32 bits (max sample bit depth being 32 bits)
@@ -55,15 +56,13 @@ namespace RealTimeVisualiser
                     // converts the sample from bytes to a single
                     var _intSample = BitConverter.ToSingle(_sample);                   
 
-
+  
                     currentData.Add(_intSample);
                 }
-                    
-
                 
                 //capture.WaveFormat()
 
-                        
+                
                 //fft a.Buffer                
             };
 
