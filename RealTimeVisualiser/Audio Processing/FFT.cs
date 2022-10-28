@@ -1,10 +1,15 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Numerics;
+using Color = Microsoft.Xna.Framework.Color;
+using Vector2 = Microsoft.Xna.Framework.Vector2;
+using Rectangle = Microsoft.Xna.Framework.Rectangle;
 using System.Drawing;
 namespace RealTimeVisualiser
 {
@@ -16,12 +21,21 @@ namespace RealTimeVisualiser
     {
         private Vector2 _screenDimensions;
         private Vector2 _graphOrigin;
+        private PointF[] _realTransform;
+        private Texture2D _colour;
 
-        public FastFourierTransform(Vector2 ScreenDimensions)
+        private float Xscale;
+        private float YscaleConst;
+        private float Yscale;
+
+        public FastFourierTransform(Vector2 ScreenDimensions, Texture2D pixelcolour)
         {
-            Vector2 _screenDimensions = ScreenDimensions;
+            //_graphOrigin = new Vector2( 470f / 1920f * 1920 , 821f / 1080f * 1080);
+            _graphOrigin = new Vector2(470f / 1920f * 1920, 820f / 1080f * 1080);
+            _screenDimensions = new Vector2( 1416f / 1920f * ScreenDimensions.X, 795f / 1080f * ScreenDimensions.Y);
 
-            
+            _colour = pixelcolour;
+
             //foreach (var p in realTransform) Console.WriteLine("frequency: " + Convert.ToString(Math.Round(p.X / 1.499268, 5)));
             //Console.WriteLine("biggest:" + biggest);
             /*
@@ -34,14 +48,38 @@ namespace RealTimeVisualiser
             //graphics.DrawLines(pen, realTransform);
             //graphics.DrawLines(pen, input);
         }
-        public PointF[] FFTForwardtoPoints(Single[] samples)
+
+        public void Draw(SpriteBatch _spriteBatch)
         {
-            Complex[] complexSamples = toComplexArray(samples);
-            Complex[] transform = FFT(complexSamples);
-            PointF[] realTransform = complex_transform_to_freqs(transform, _screenDimensions);
-            return realTransform;
+            if( _realTransform != null )
+            {
+                var pos0 = _graphOrigin;
+                foreach (PointF p in _realTransform)
+                {
+                    /*
+                    //var pos = new Rectangle((int)Math.Abs(p.X + _graphOrigin.X), (int)Math.Abs(_graphOrigin.Y - p.Y), 1, (int)Math.Abs(p.Y));
+                    var pos1 = new Rectangle((int)(p.X + _graphOrigin.X), (int)(_graphOrigin.Y - Math.Abs(p.Y)), 3, 3);
+                    _spriteBatch.Draw(_colour, pos, Color.White);
+                    */
+                    var pos1 = new Vector2((int)(p.X + _graphOrigin.X), (int)(_graphOrigin.Y - Math.Abs(p.Y)));
+                    DrawLine(_spriteBatch, pos0, pos1, Color.White);
+                    pos0 = pos1;
+                }
+            }
+            
         }
-        private static Complex[] FFT(Complex[] samples)
+
+        public void FFTForwardtoPoints(Single[] samples, float amplitude)
+        {
+            Yscale = YscaleConst * amplitude * 10;
+            var complexSamples = toComplexArray(samples);
+            var transform = FFT(complexSamples);
+            _realTransform = complex_transform_to_freqs(transform);
+            //Debug.WriteLine(string.Join(',', _realTransform));
+            //Debug.WriteLine(string.Join(',', transform));
+
+        }
+        private Complex[] FFT(Complex[] samples)
         {
 
             Complex CONST_i = new Complex(0, 1);
@@ -69,7 +107,7 @@ namespace RealTimeVisualiser
             return transform;
 
         }
-        private static Complex[] toComplexArray(Single[] singleArray)
+        private Complex[] toComplexArray(Single[] singleArray)
         {
             Complex[] complexArray = new Complex[singleArray.Length];
 
@@ -87,7 +125,7 @@ namespace RealTimeVisualiser
             return (x != 0) && ((x & (x - 1)) == 0);
         }
 
-        private static double[] str_to_double_array(string stringSamples)
+        private double[] str_to_double_array(string stringSamples)
         {
             string[] str_array = (stringSamples.Split(new string[] { "," }, StringSplitOptions.None));
             double[] doubleArray = new double[str_array.Length];
@@ -99,7 +137,7 @@ namespace RealTimeVisualiser
             return doubleArray;
         }
 
-        private static void printDoubleArray(double[] array)
+        private void printDoubleArray(double[] array)
         {
             foreach (double i in array)
             {
@@ -113,25 +151,46 @@ namespace RealTimeVisualiser
             return x;
         }
 
-        private static PointF[] complex_transform_to_freqs(Complex[] complexArray, Vector2 dimensions)
+        private PointF[] complex_transform_to_freqs(Complex[] complexArray)
         {
-
+            //Debug.WriteLine(complexArray.Length);
             List<PointF> freqs = new List<PointF> { };
-            var Xscale = complexArray.Length / dimensions.X;
-            double maxIm = 0;
-
+            //var Xscale = (complexArray.Length * 1.9135f) / _screenDimensions.X ;
+            //double maxIm = 0;
+            //var Yscale = _screenDimensions.Y * 100 / complexArray.Length;
             //Single x = 1000F / complexArray.Length;
-            for (int i = 0; i < complexArray.Length; i++)
+            for (int i = 0; i < complexArray.Length/20; i++)
             {
-                if (complexArray[i].Imaginary > 1)
-                {
-                    freqs.Add(new PointF(i * Xscale, Convert.ToSingle(complexArray[i].Imaginary)));
-                    if (complexArray[i].Imaginary > maxIm) maxIm = complexArray[i].Imaginary;
-                }
+                //if (complexArray[i].Imaginary > 1)
+                //{
+                freqs.Add(new PointF(Convert.ToSingle(Xscale * Math.Sqrt(i)), Convert.ToSingle((complexArray[i].Magnitude) * Yscale  * Math.Sqrt(i * 0.5))));
+                //freqs.Add(new PointF(Math.Abs(Convert.ToSingle(complexArray[i].Real) * Yscale), Math.Abs(Convert.ToSingle(complexArray[i].Imaginary) * Yscale)));
+                //if (complexArray[i].Imaginary > maxIm) maxIm = complexArray[i].Imaginary;
+
+                //if(complexArray[i+1].Imaginary < 1) break;
+                //}
             }
-            var Yscale = maxIm / complexArray.Length;
-            for (int i = 0; i < freqs.Count; i++) freqs[i] = new PointF(freqs[i].X, Convert.ToSingle(dimensions.Y - freqs[i].Y * Yscale));
+
+            //Debug.WriteLine(Yscale);
+            //or (int i = 0; i < freqs.Count; i++) freqs[i] = new PointF(freqs[i].X, Convert.ToSingle(_screenDimensions.Y - freqs[i].Y * Yscale));
             return freqs.ToArray();
+        }
+
+        public void SetInputLength(int samplesNo)
+        {
+            //Xscale = ((samplesNo * 1.9135f) / _screenDimensions.X) /(samplesNo / 1024f) * (1f/ (samplesNo / 1024f));
+            Xscale = (float)(2006450f / (_screenDimensions.X * Math.Sqrt(samplesNo)))* 4.47f;
+            Yscale =  _screenDimensions.Y / samplesNo;
+            YscaleConst = Yscale;
+        }
+
+        private void DrawLine(SpriteBatch spriteBatch, Vector2 begin, Vector2 end, Color color, int width = 1)
+        {
+            Rectangle r = new Rectangle((int)begin.X, (int)begin.Y, (int)(end - begin).Length() + width, width);
+            Vector2 v = Vector2.Normalize(begin - end);
+            float angle = (float)Math.Acos(Vector2.Dot(v, -Vector2.UnitX));
+            if (begin.Y > end.Y) angle = MathHelper.TwoPi - angle;
+            spriteBatch.Draw(_colour, r, null, color, angle, Vector2.Zero, SpriteEffects.None, 0);
         }
 
     }
