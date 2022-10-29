@@ -49,7 +49,10 @@ namespace RealTimeVisualiser
  
         }
 
-        //adds char to text string
+        /// <summary>
+        /// adds char to text string
+        /// </summary>
+        /// <param name="_char"></param>
         public void updateTxt (char _char)
         {
             if (int.TryParse(Convert.ToString(_char),out _) || _char == '.')
@@ -58,7 +61,9 @@ namespace RealTimeVisualiser
             }
         }
 
-        //removes last char in text str
+        /// <summary>
+        /// removes last char in text str
+        /// </summary>
         public void deleteTxt()
         {
             if (text != "")
@@ -66,7 +71,11 @@ namespace RealTimeVisualiser
                 text = text.Remove(text.Length - 1);
             }
         }
-        //draws textcontrol at location, color dependent on whether mouse is hovering
+        /// <summary>
+        /// draws textcontrol at location, color dependent on whether mouse is hovering
+        /// </summary>
+        /// <param name="_gameTime"></param>
+        /// <param name="_spriteBatch"></param>
         public override void Draw(GameTime _gameTime, SpriteBatch _spriteBatch)
         {
 
@@ -90,7 +99,10 @@ namespace RealTimeVisualiser
 
         }
 
-        //checks if mouse is hovering, then invokes click event if mouse leftbutton pressed
+        /// <summary>
+        /// /checks if mouse is hovering, then invokes click event if mouse leftbutton pressed
+        /// </summary>
+        /// <param name="gameTime"></param>
         public override void Update(GameTime gameTime)
         {
             _previousMouse = _currentMouse;

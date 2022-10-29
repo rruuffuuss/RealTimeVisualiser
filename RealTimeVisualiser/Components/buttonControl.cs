@@ -48,7 +48,11 @@ namespace RealTimeVisualiser
             _font = font;
         }
 
-        //draws button at location, color dependent on whether mouse is hovering
+        /// <summary>
+        /// draws button at location, color dependent on whether mouse is hovering
+        /// </summary>
+        /// <param name="_gameTime"></param>
+        /// <param name="_spriteBatch"></param>
         public override void Draw(GameTime _gameTime, SpriteBatch _spriteBatch)
         {
 
@@ -68,7 +72,10 @@ namespace RealTimeVisualiser
           
         }
 
-        //checks if mouse is hovering, then invokes click event if mouse leftbutton pressed
+        /// <summary>
+        /// checks if mouse is hovering, then invokes click event if mouse leftbutton pressed
+        /// </summary>
+        /// <param name="gameTime"></param>
         public override void Update(GameTime gameTime)
         {
             _previousMouse = _currentMouse;

@@ -25,14 +25,11 @@ namespace RealTimeVisualiser
 
         public byte[] invBits;
 
-
         public audioIn(int bitDepth)
         {
             capture = new WasapiLoopbackCapture();
 
-
             _byteDepth = bitDepth / 8;
-
 
             Debug.WriteLine(bitDepth);
 
@@ -40,9 +37,7 @@ namespace RealTimeVisualiser
 
             //when new audio data avialable even handler
             capture.DataAvailable += (s, a) =>
-            {
-                
-         
+            {                      
                 //for loop where i steps through each sample (each sample is multiple bytes)
                 for(int i = 0; i < a.BytesRecorded ; i += _byteDepth)
                 {
@@ -55,18 +50,10 @@ namespace RealTimeVisualiser
  
                     // converts the sample from bytes to a single
                     var _intSample = BitConverter.ToSingle(_sample);                   
-
-  
+ 
                     currentData.Add(_intSample);
-                }
-                
-                //capture.WaveFormat()
-
-                
-                //fft a.Buffer                
+                }                             
             };
-
-            
         }
 
 

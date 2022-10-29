@@ -11,12 +11,8 @@ namespace RealTimeVisualiser
     /// </summary>
     public abstract class Component
     {
-
         public abstract void Draw(GameTime _gameTime, SpriteBatch _spriteBatch);
 
-
-
         public abstract void Update(GameTime gameTime);
-
     }
 }

@@ -23,6 +23,7 @@ namespace RealTimeVisualiser
 
         private List<Single> displayData;
 
+
         public inputGraph( int samplerate,Vector2 screenSize, Texture2D pixelcolour)
         {
 
@@ -39,7 +40,12 @@ namespace RealTimeVisualiser
             
         }
 
-        public  void Draw(GameTime _gameTime, SpriteBatch _spriteBatch)
+        /// <summary>
+        /// /draws a point representing each sample in the buffer
+        /// </summary>
+        /// <param name="_gameTime"></param>
+        /// <param name="_spriteBatch"></param>
+        public void Draw(GameTime _gameTime, SpriteBatch _spriteBatch)
         {
             //Debug.WriteLine("test3");
             //Debug.WriteLine(displayData.Count);
@@ -55,8 +61,14 @@ namespace RealTimeVisualiser
             
         }
 
-        //adds new samples to list, removes old ones to maintain a consistent length
-        //selects the most recent x samples for FFT
+        /// <summary>
+        ///adds new samples to list, removes old ones to maintain a consistent length, selects the most recent x samples for FFT
+        /// </summary>
+        /// <param name="gameTime"></param>
+        /// <param name="newData"></param>
+        /// <param name="FFTSamplesLength"></param>
+        /// <param name="canFFT"></param>
+        /// <returns></returns>
         public Single[] Update(GameTime gameTime, List<Single> newData, int FFTSamplesLength, out bool canFFT)
         {
             
@@ -76,6 +88,10 @@ namespace RealTimeVisualiser
             return new Single[0];
         }
 
+        /// <summary>
+        /// sets the options for the next execution used for scaling
+        /// </summary>
+        /// <param name="timeScale"></param>
         public void setInputData(Single timeScale)
         {
             _timeScale = timeScale;

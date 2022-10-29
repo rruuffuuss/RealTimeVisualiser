@@ -46,8 +46,6 @@ namespace RealTimeVisualiser
                 _spriteBatch.Draw(normalTexture, new Rectangle(Game1.CURRENTMOUSE.X - cursorWidth/2, Game1.CURRENTMOUSE.Y - cursorHeight/2, cursorWidth, cursorHeight), Color.White);
             }        
         }
-
-
         public override void Update(GameTime gameTime)
         {
             _currentMouse = Mouse.GetState();
