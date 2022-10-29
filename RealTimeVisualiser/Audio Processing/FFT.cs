@@ -14,8 +14,6 @@ using System.Drawing;
 namespace RealTimeVisualiser
 {
 
-    //NEED TO IMPLEMENT FUNCTION THAT TAKES HZ OR SAMPLE TIME AND USES IT TO WORK OUT FREQUENCY
-    //currently all frequencies are arbitrary values that are correctly proportional to each other 
 
     class FastFourierTransform
     {
@@ -28,10 +26,14 @@ namespace RealTimeVisualiser
         private float YscaleConst;
         private float Yscale;
 
+        private float _pitchBias;
+
         public FastFourierTransform(Vector2 ScreenDimensions, Texture2D pixelcolour)
         {
-            //_graphOrigin = new Vector2( 470f / 1920f * 1920 , 821f / 1080f * 1080);
-            _graphOrigin = new Vector2(470f / 1920f * 1920, 820f / 1080f * 1080);
+            //_graphOrigin = new Vector2( 470f / 1920f * 1920 , 821f / 1080f * ScreenDimensions.Y);
+
+            //scale origin and size to screensize
+            _graphOrigin = new Vector2(470f / 1920f * ScreenDimensions.X, 820f / 1080f * ScreenDimensions.Y);
             _screenDimensions = new Vector2( 1416f / 1920f * ScreenDimensions.X, 795f / 1080f * ScreenDimensions.Y);
 
             _colour = pixelcolour;
@@ -61,6 +63,8 @@ namespace RealTimeVisualiser
                     var pos1 = new Rectangle((int)(p.X + _graphOrigin.X), (int)(_graphOrigin.Y - Math.Abs(p.Y)), 3, 3);
                     _spriteBatch.Draw(_colour, pos, Color.White);
                     */
+
+                    //draw lines between current point and last point
                     var pos1 = new Vector2((int)(p.X + _graphOrigin.X), (int)(_graphOrigin.Y - Math.Abs(p.Y)));
                     DrawLine(_spriteBatch, pos0, pos1, Color.White);
                     pos0 = pos1;
@@ -69,9 +73,12 @@ namespace RealTimeVisualiser
             
         }
 
-        public void FFTForwardtoPoints(Single[] samples, float amplitude)
+        public void FFTForwardtoPoints(Single[] samples, float amplitude, float bias)
         {
+            //scale to values from sliders
             Yscale = YscaleConst * amplitude * 10;
+            _pitchBias = bias * 5;
+
             var complexSamples = toComplexArray(samples);
             var transform = FFT(complexSamples);
             _realTransform = complex_transform_to_freqs(transform);
@@ -79,6 +86,12 @@ namespace RealTimeVisualiser
             //Debug.WriteLine(string.Join(',', transform));
 
         }
+
+        /// <summary>
+        /// calculates the DFT of the iput samples
+        /// </summary>
+        /// <param name="samples"></param>
+        /// <returns>array of points of DFT</returns>
         private Complex[] FFT(Complex[] samples)
         {
 
@@ -88,16 +101,20 @@ namespace RealTimeVisualiser
             if (n == 1) return samples;
             else if (!IsPowerOfTwo(n)) { throw new ArgumentOutOfRangeException(); }
 
+            //o = first root of unity for array of length n
             Complex o = Complex.Pow(Math.E, (2 * Math.PI * CONST_i) / n);
 
+            //splits samples into even and odd
             Complex[] samples_e = samples.Where((x, i) => i % 2 == 0).ToArray();
             Complex[] samples_o = samples.Where((x, i) => i % 2 != 0).ToArray();
 
+            //FFTs both arrays
             Complex[] transform_e = FFT(samples_e);
             Complex[] transform_o = FFT(samples_o);
 
             Complex[] transform = new Complex[n];
 
+            //combines even and odd FFTs back into single array
             for (int i = 0; i < n / 2; i++)
             {
                 transform[i] = transform_e[i] + Complex.Pow(o, i) * transform_o[i];
@@ -107,6 +124,12 @@ namespace RealTimeVisualiser
             return transform;
 
         }
+
+        /// <summary>
+        /// converts and array of real numbers to an array of real numbers
+        /// </summary>
+        /// <param name="singleArray"></param>
+        /// <returns>an array of complex numbers</returns>
         private Complex[] toComplexArray(Single[] singleArray)
         {
             Complex[] complexArray = new Complex[singleArray.Length];
@@ -119,12 +142,23 @@ namespace RealTimeVisualiser
             return complexArray;
         }
 
+        /// <summary>
+        /// checks if number is power of 2
+        /// </summary>
+        /// <param name="d"></param>
+        /// <returns></returns>
         static bool IsPowerOfTwo(int d)
         {
             ulong x = Convert.ToUInt64(d);
             return (x != 0) && ((x & (x - 1)) == 0);
         }
 
+        //used for testing only
+        /// <summary>
+        /// parses a string to an array of doubles
+        /// </summary>
+        /// <param name="stringSamples"></param>
+        /// <returns>an array of doubles</returns>
         private double[] str_to_double_array(string stringSamples)
         {
             string[] str_array = (stringSamples.Split(new string[] { "," }, StringSplitOptions.None));
@@ -137,6 +171,11 @@ namespace RealTimeVisualiser
             return doubleArray;
         }
 
+        //used for testing only
+        /// <summary>
+        /// prints double array
+        /// </summary>
+        /// <param name="array"></param>
         private void printDoubleArray(double[] array)
         {
             foreach (double i in array)
@@ -145,12 +184,11 @@ namespace RealTimeVisualiser
             }
         }
 
-        private double[] getFreqs(PointF[] points)
-        {
-            var x = new double[0];
-            return x;
-        }
-
+        /// <summary>
+        /// //scales and crops the complex transform to a scale and range that is appropriate for music and human listening
+        /// </summary>
+        /// <param name="complexArray"></param>
+        /// <returns>an array of points</returns>
         private PointF[] complex_transform_to_freqs(Complex[] complexArray)
         {
             //Debug.WriteLine(complexArray.Length);
@@ -163,7 +201,10 @@ namespace RealTimeVisualiser
             {
                 //if (complexArray[i].Imaginary > 1)
                 //{
-                freqs.Add(new PointF(Convert.ToSingle(Xscale * Math.Sqrt(i)), Convert.ToSingle((complexArray[i].Magnitude) * Yscale  * Math.Sqrt(i * 0.5))));
+                var x = Convert.ToSingle(Xscale * Math.Sqrt(i));
+                var y = Yscale * Math.Sqrt(i * _pitchBias);
+                freqs.Add(new PointF(x, Convert.ToSingle(y * complexArray[i].Magnitude)));
+
                 //freqs.Add(new PointF(Math.Abs(Convert.ToSingle(complexArray[i].Real) * Yscale), Math.Abs(Convert.ToSingle(complexArray[i].Imaginary) * Yscale)));
                 //if (complexArray[i].Imaginary > maxIm) maxIm = complexArray[i].Imaginary;
 
@@ -176,6 +217,10 @@ namespace RealTimeVisualiser
             return freqs.ToArray();
         }
 
+        /// <summary>
+        /// plans the X and Y scales to be used for this execution of the game 
+        /// </summary>
+        /// <param name="samplesNo"></param>
         public void SetInputLength(int samplesNo)
         {
             //Xscale = ((samplesNo * 1.9135f) / _screenDimensions.X) /(samplesNo / 1024f) * (1f/ (samplesNo / 1024f));
@@ -184,6 +229,14 @@ namespace RealTimeVisualiser
             YscaleConst = Yscale;
         }
 
+        /// <summary>
+        /// draws a line between 2 points
+        /// </summary>
+        /// <param name="spriteBatch"></param>
+        /// <param name="begin"></param>
+        /// <param name="end"></param>
+        /// <param name="color"></param>
+        /// <param name="width"></param>
         private void DrawLine(SpriteBatch spriteBatch, Vector2 begin, Vector2 end, Color color, int width = 1)
         {
             Rectangle r = new Rectangle((int)begin.X, (int)begin.Y, (int)(end - begin).Length() + width, width);
