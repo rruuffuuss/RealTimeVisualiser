@@ -22,8 +22,10 @@ namespace RealTimeVisualiser
 
         private List<Component> _gameComponent;
         private List<TextBox> _textBoxs;
+        private List<Slide> _sliders;
 
         private Vector2 FPSDisplayPos;
+        private Vector2 _screenDimensions;
 
         public static MouseState CURRENTMOUSE;
         public static bool GAMESTATE;
@@ -41,10 +43,12 @@ namespace RealTimeVisualiser
         private int FFTLen;
 
         private List<Single> _audioData;
-        private double[] data_to_FFT;
-        private double[] freq_data;
+        
 
         private inputGraph _inputGraph;
+        private FastFourierTransform _FFTDisplay;
+        //private bool _drawGraphs;
+
         private int bitDepth = 32;
         private int sampleRate = 48000; //38400;
 
@@ -81,15 +85,13 @@ namespace RealTimeVisualiser
             _graphics.HardwareModeSwitch = false;
             _graphics.ApplyChanges();
 
-
-
-            _screenPos = new Rectangle(new Point(0, 0), new Point(GraphicsDevice.DisplayMode.Width, GraphicsDevice.DisplayMode.Height));
-            FPSDisplayPos = new Vector2(GraphicsDevice.DisplayMode.Width - GraphicsDevice.DisplayMode.Width / 16, GraphicsDevice.DisplayMode.Height / 40);
         }
 
         protected override void LoadContent()
         {
-
+            _screenDimensions = new Vector2(Convert.ToSingle(GraphicsDevice.DisplayMode.Width), Convert.ToSingle(GraphicsDevice.DisplayMode.Height));
+            _screenPos = new Rectangle(new Point(0, 0), new Point(GraphicsDevice.DisplayMode.Width, GraphicsDevice.DisplayMode.Height));
+            FPSDisplayPos = new Vector2(GraphicsDevice.DisplayMode.Width - GraphicsDevice.DisplayMode.Width / 16, GraphicsDevice.DisplayMode.Height / 40);
 
             _spriteBatch = new SpriteBatch(GraphicsDevice);
             SourceHeavy = Content.Load<SpriteFont>("Source");
@@ -164,6 +166,17 @@ namespace RealTimeVisualiser
 
             lessSamplesButton.click += lessSamplesButton_Click;
 
+            var amplitudeSlide = new Slide(whitePixel, _buttonTexture)
+            {
+                position = new Vector2(53 * 1920 / GraphicsDevice.DisplayMode.Width, 360 * 1080 / GraphicsDevice.DisplayMode.Height),
+                dimensions = new Vector2(371 * 1920 / GraphicsDevice.DisplayMode.Width, 45 * 1080 / GraphicsDevice.DisplayMode.Height),
+                slitWidth = 4,
+                handleWidth = 27,
+                distance = 0,
+                penColour = Color.White
+
+            };
+
             _gameComponent = new List<Component>()
             {
                 fourierInputText,
@@ -171,8 +184,7 @@ namespace RealTimeVisualiser
                 randomButton,
                 quitButton,
                 moreSamplesButton,
-                lessSamplesButton
-                
+                lessSamplesButton,              
             };
 
             _textBoxs = new List<TextBox>()
@@ -181,10 +193,14 @@ namespace RealTimeVisualiser
                 fourierInputText,
             };
 
-            _audioIn = new audioIn(bitDepth);
-  
+            _sliders = new List<Slide>()
+            {
+                amplitudeSlide,
+            };
 
-            _inputGraph = new inputGraph(sampleRate, new Vector2(Convert.ToInt32(GraphicsDevice.DisplayMode.Width), GraphicsDevice.DisplayMode.Height), whitePixel);
+            _audioIn = new audioIn(bitDepth);
+            _inputGraph = new inputGraph(sampleRate,_screenDimensions, whitePixel);
+            _FFTDisplay = new FastFourierTransform(_screenDimensions, whitePixel);
         }
 
      
@@ -253,7 +269,7 @@ namespace RealTimeVisualiser
                 if (_textBoxs[0].text == "") _textBoxs[0].text = "1.0";
                 else if (!Single.TryParse(_textBoxs[0].text, out _)) _textBoxs[0].text += ".0";
 
-                if (_textBoxs[1].text == "") _textBoxs[1].text = "256";
+                if (_textBoxs[1].text == "") _textBoxs[1].text = "1024";
 
                 
 
@@ -262,6 +278,7 @@ namespace RealTimeVisualiser
 
                 currentTextBox = 0;
 
+                _FFTDisplay.SetInputLength(Convert.ToInt32(_textBoxs[1].text));
                 _inputGraph.setInputData(inputLen);
                 _audioIn._start();                
             }
@@ -293,19 +310,32 @@ namespace RealTimeVisualiser
 
             isTyping = TryConvertKeyboardInput(_currentKeyboard, _oldKeyboard,out keyInpt);
 
+            //_drawGraphs = false;
+
             if (GAMESTATE == true)
             {
 
-                _audioData = _audioIn.currentData;
-                ////suspect this gap is whats causing grpah irrelugarities
+                var x = _audioIn.currentData;
                 _audioIn.currentData = new List<Single>();
+                _audioData = x;
+                ////suspect this gap is whats causing grpah irrelugarities
+
 
 
                 if (_audioData != null && _audioData.Count != 0)
                 {
                     //Debug.WriteLine("test2");
-                    data_to_FFT = _inputGraph.Update(gameTime, _audioData, FFTLen); //input needs a decimal place bruh or big crash
+                    //input needs a decimal place bruh or big crash
+                    var data = _inputGraph.Update(gameTime, _audioData, FFTLen, out var canFFT);
 
+                    //_FFTDisplay.FFTForwardtoPoints(data);
+                    
+                    if (canFFT)
+                    {
+                        _FFTDisplay.FFTForwardtoPoints(data,_sliders[0].distance);
+                        //_drawGraphs = true;                       
+                    }
+                    
                 }
             }
 
@@ -335,6 +365,11 @@ namespace RealTimeVisualiser
                 component.Update(gameTime);
             }
 
+            foreach(var slide in _sliders)
+            {
+                slide.Update(gameTime);
+            }
+
             base.Update(gameTime);
         }
 
@@ -343,18 +378,35 @@ namespace RealTimeVisualiser
             GraphicsDevice.Clear(_backColor);
             _spriteBatch.Begin();
 
-            _spriteBatch.Draw(_boxes,  _screenPos, Color.White);
+            
            
             foreach (var component in _gameComponent)
             {
                 component.Draw(gameTime, _spriteBatch);
             }
 
-            if(GAMESTATE == true) _inputGraph.Draw(gameTime, _spriteBatch);
+            foreach (var slide in _sliders)
+            {
+                slide.Draw(gameTime,_spriteBatch);
+            }
+
+            if (GAMESTATE == true)
+            {
+                _inputGraph.Draw(gameTime, _spriteBatch);
+                
+                _FFTDisplay.Draw(_spriteBatch);
+                
+            }
+            
+
+                    
+
             _spriteBatch.DrawString(SourceHeavy, (Convert.ToString(1 / gameTime.ElapsedGameTime.TotalSeconds)).Substring(0,5), FPSDisplayPos, Color.White);
-            _spriteBatch.Draw(_labels, _screenPos, Color.White);
+            
             _spriteBatch.DrawString(SourceHeavy, _pausePlay, new Vector2(_pausePLayTxtX, _pausePLayTxtY), Color.White);
             _cursor.Draw(gameTime, _spriteBatch);
+            _spriteBatch.Draw(_boxes, _screenPos, Color.White);
+            _spriteBatch.Draw(_labels, _screenPos, Color.White);
             _spriteBatch.End();
             // TODO: Add your drawing code here
             //to make "sliding" button banks swap buttons for an image
