@@ -33,7 +33,7 @@ namespace RealTimeVisualiser
             displayData = new List<Single> ();
 
             //screensize as a fraction of 1080 x 4.2 x the max amplitude of a sound sample / 512
-            YAxisMultiplier = (float)(screenSize.Y * 140/1080);  
+            YAxisMultiplier = (float)(screenSize.Y * 100/1080);  
 
 
             
@@ -41,8 +41,8 @@ namespace RealTimeVisualiser
 
         public  void Draw(GameTime _gameTime, SpriteBatch _spriteBatch)
         {
-            Debug.WriteLine("test3");
-            Debug.WriteLine(displayData.Count);
+            //Debug.WriteLine("test3");
+            //Debug.WriteLine(displayData.Count);
             for(int i = 0; i < displayData.Count; i++)
             {
   
@@ -55,27 +55,37 @@ namespace RealTimeVisualiser
             
         }
 
-        public Single[] Update(GameTime gameTime, List<Single> newData, int FFTSamplesLength)
+        //adds new samples to list, removes old ones to maintain a consistent length
+        //selects the most recent x samples for FFT
+        public Single[] Update(GameTime gameTime, List<Single> newData, int FFTSamplesLength, out bool canFFT)
         {
             
             displayData.AddRange(newData);
             var x = (int)(displayData.Count - totalSamples);
-            if(x > 0) displayData.RemoveRange(0, x);
-            //Debug.WriteLine(x);
+            if (x > 0) displayData.RemoveRange(0, x);
 
-            return (displayData.GetRange(displayData.Count - FFTSamplesLength, FFTSamplesLength)).ToArray();
+
+            if (displayData.Count > FFTSamplesLength)
+            {
+                canFFT = true;
+                return displayData.GetRange(displayData.Count - FFTSamplesLength, FFTSamplesLength).ToArray();
+            }
+
+            //Debug.WriteLine(x);
+            canFFT = false;
+            return new Single[0];
         }
 
         public void setInputData(Single timeScale)
         {
+            _timeScale = timeScale;
             totalSamples = Convert.ToInt32(_sampleRate * _timeScale);
             distanceMultiplier = axisLength.X / _sampleRate * _timeScale;
-            _timeScale = timeScale;
+        
         }
 
         public void _stop()
         {
-
             displayData = new List<Single> { 0 };
         }
     }
