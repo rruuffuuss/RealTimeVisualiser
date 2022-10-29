@@ -18,11 +18,13 @@ namespace RealTimeVisualiser
 
         private Texture2D _slitTexture;
         private Texture2D _handleTexture;
+        private SpriteFont _font;
+
         #endregion
 
         #region Properties
 
-    
+
         public bool clicked { get; private set; }
 
         public Color penColour { get; set; }
@@ -33,6 +35,9 @@ namespace RealTimeVisualiser
         public float handleWidth { get; set; }
 
         public float distance { get; set; }
+
+        public string text { get; set; }
+
 
         public Rectangle slitRectangle
         {
@@ -54,13 +59,18 @@ namespace RealTimeVisualiser
 
         #region Methods
 
-        public Slide(Texture2D slitTexture, Texture2D handleTexture)
+        public Slide(Texture2D slitTexture, Texture2D handleTexture, SpriteFont spriteFont)
         {
             _slitTexture = slitTexture;
             _handleTexture = handleTexture;
+            _font = spriteFont;
         }
 
-        //draws button at location, color dependent on whether mouse is hovering
+        /// <summary>
+        /// draws slide at location, color dependent on whether mouse is hovering
+        /// </summary>
+        /// <param name="_gameTime"></param>
+        /// <param name="_spriteBatch"></param>
         public override void Draw(GameTime _gameTime, SpriteBatch _spriteBatch)
         {
 
@@ -70,11 +80,18 @@ namespace RealTimeVisualiser
 
             _spriteBatch.Draw(_handleTexture, handleRectangle, colour);
 
+            var x = (position.X);
+            var y = position.Y - _font.MeasureString(text).Y;
+            _spriteBatch.DrawString(_font, text + Convert.ToString(Math.Round(distance,4)), new Vector2(x, y), penColour);// draws button text
+
 
 
         }
 
-        //checks if mouse is hovering, then invokes click event if mouse leftbutton pressed
+        /// <summary>
+        /// moves the slide to the new mouse position if the mouse is being held down on the handle, changes distance scalar accordingly
+        /// </summary>
+        /// <param name="gameTime"></param>
         public override void Update(GameTime gameTime)
         {
             _previousMouse = _currentMouse;
@@ -100,7 +117,7 @@ namespace RealTimeVisualiser
                     distance = (float)(x - slitRectangle.X) / (float)slitRectangle.Width;
                 }
             }
-            Debug.WriteLine(distance);
+            //Debug.WriteLine(distance);
         }
 
         #endregion
