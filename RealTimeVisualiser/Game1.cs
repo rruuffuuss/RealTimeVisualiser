@@ -65,6 +65,9 @@ namespace RealTimeVisualiser
             IsMouseVisible = true;
         }
 
+        /// <summary>
+        /// initializes graphics and input 
+        /// </summary>
         protected override void Initialize()
         {
             // TODO: Add your initialization logic here
@@ -73,8 +76,8 @@ namespace RealTimeVisualiser
             GAMESTATE = false;
 
             _pausePlay = "paused";
-            _pausePLayTxtX = Convert.ToInt16(39 * 1920 / GraphicsDevice.DisplayMode.Width); //- (SourceHeavy.MeasureString(_pausePlay).X / 2
-            _pausePLayTxtY = 31 * 1080 / GraphicsDevice.DisplayMode.Height;
+            _pausePLayTxtX = Convert.ToInt16(39 * GraphicsDevice.DisplayMode.Width / 1920); //- (SourceHeavy.MeasureString(_pausePlay).X / 2
+            _pausePLayTxtY = 31 * GraphicsDevice.DisplayMode.Height / 1080;
 
             _currentKeyboard = Keyboard.GetState();
 
@@ -87,38 +90,41 @@ namespace RealTimeVisualiser
 
         }
 
+        /// <summary>
+        /// loads all content to be used during runtime and creates relevant objects
+        /// </summary>
         protected override void LoadContent()
         {
+            
             _screenDimensions = new Vector2(Convert.ToSingle(GraphicsDevice.DisplayMode.Width), Convert.ToSingle(GraphicsDevice.DisplayMode.Height));
             _screenPos = new Rectangle(new Point(0, 0), new Point(GraphicsDevice.DisplayMode.Width, GraphicsDevice.DisplayMode.Height));
             FPSDisplayPos = new Vector2(GraphicsDevice.DisplayMode.Width - GraphicsDevice.DisplayMode.Width / 16, GraphicsDevice.DisplayMode.Height / 40);
 
             _spriteBatch = new SpriteBatch(GraphicsDevice);
-            SourceHeavy = Content.Load<SpriteFont>("Source");
 
+            //loading textures
+            SourceHeavy = Content.Load<SpriteFont>("Source");
             _boxes = Content.Load<Texture2D>("boxes");
             _labels = Content.Load<Texture2D>("labels");
-
             var _buttonTexture = Content.Load<Texture2D>("button texture");
             var _textboxTexture = Content.Load<Texture2D>("textbox texture");
             var whitePixel = Content.Load<Texture2D>("whitePix");
 
-            // TODO: use this.Content to load your game content here
-
+            //creating controls
             _cursor = new Cursor(Content.Load<Texture2D>("cursorsml"), Content.Load<Texture2D>("cursorUsesml"));
 
             var fourierInputText = new TextBox(_textboxTexture, SourceHeavy)
             {
-                position = new Vector2(Convert.ToInt32(39 * 1920 / GraphicsDevice.DisplayMode.Width), Convert.ToInt32(140 * 1080 / GraphicsDevice.DisplayMode.Height)),
+                position = new Vector2(Convert.ToInt32(39 * GraphicsDevice.DisplayMode.Width / 1920), Convert.ToInt32(140 * GraphicsDevice.DisplayMode.Height / 1080)),
                 text = "",
-                backupText = "input length",
+                backupText = "samples to analyse",
                 penColour = Color.White
             };
             fourierInputText.click += fourierInputText_Click;
 
             var timeScaleText = new TextBox(_textboxTexture, SourceHeavy)
             {
-                position = new Vector2(Convert.ToInt32(39 * 1920 / GraphicsDevice.DisplayMode.Width), Convert.ToInt32(80 * 1080 / GraphicsDevice.DisplayMode.Height)),
+                position = new Vector2(Convert.ToInt32(39 * GraphicsDevice.DisplayMode.Width / 1920), Convert.ToInt32(80 * GraphicsDevice.DisplayMode.Height / 1080)),
                 text = "",
                 backupText = "enter buffer length",
                 penColour = Color.White
@@ -128,7 +134,7 @@ namespace RealTimeVisualiser
 
             var randomButton = new Button(_buttonTexture, SourceHeavy) // need to add button texture
             {
-                position = new Vector2(39 * 1920 / GraphicsDevice.DisplayMode.Width, 31 * 1080 / GraphicsDevice.DisplayMode.Height),
+                position = new Vector2(39 * GraphicsDevice.DisplayMode.Width / 1920, 31 * GraphicsDevice.DisplayMode.Height / 1080),
                 text = "",
                 penColour = Color.White
 
@@ -138,7 +144,7 @@ namespace RealTimeVisualiser
 
             var quitButton = new Button(_buttonTexture, SourceHeavy) // need to add button texture
             {
-                position = new Vector2(39 * 1920 / GraphicsDevice.DisplayMode.Width, 772 * 1080 / GraphicsDevice.DisplayMode.Height),
+                position = new Vector2(39 * GraphicsDevice.DisplayMode.Width / 1920, 772 * GraphicsDevice.DisplayMode.Height / 1080),
                 text = "quit",
                 penColour = Color.White
 
@@ -148,7 +154,7 @@ namespace RealTimeVisualiser
 
             var moreSamplesButton = new Button(_buttonTexture, SourceHeavy)
             {
-                position = new Vector2(258 * 1920 / GraphicsDevice.DisplayMode.Width, 189 * 1080 / GraphicsDevice.DisplayMode.Height),
+                position = new Vector2(258 * GraphicsDevice.DisplayMode.Width / 1920, 189 * GraphicsDevice.DisplayMode.Height / 1080),
                 text = ">",
                 penColour = Color.White
 
@@ -158,7 +164,7 @@ namespace RealTimeVisualiser
 
             var lessSamplesButton = new Button(_buttonTexture, SourceHeavy)
             {
-                position = new Vector2(39 * 1920 / GraphicsDevice.DisplayMode.Width, 189 * 1080 / GraphicsDevice.DisplayMode.Height),
+                position = new Vector2(39 * GraphicsDevice.DisplayMode.Width / 1920, 189 * GraphicsDevice.DisplayMode.Height / 1080),
                 text = "<",
                 penColour = Color.White
 
@@ -166,17 +172,30 @@ namespace RealTimeVisualiser
 
             lessSamplesButton.click += lessSamplesButton_Click;
 
-            var amplitudeSlide = new Slide(whitePixel, _buttonTexture)
+            var amplitudeSlide = new Slide(whitePixel, _buttonTexture, SourceHeavy)
             {
-                position = new Vector2(53 * 1920 / GraphicsDevice.DisplayMode.Width, 360 * 1080 / GraphicsDevice.DisplayMode.Height),
-                dimensions = new Vector2(371 * 1920 / GraphicsDevice.DisplayMode.Width, 45 * 1080 / GraphicsDevice.DisplayMode.Height),
+                position = new Vector2(53 * GraphicsDevice.DisplayMode.Width / 1920, 360 * GraphicsDevice.DisplayMode.Height / 1080),
+                dimensions = new Vector2(371 * GraphicsDevice.DisplayMode.Width / 1920, 45 * GraphicsDevice.DisplayMode.Height / 1080),
                 slitWidth = 4,
                 handleWidth = 27,
-                distance = 0,
-                penColour = Color.White
-
+                distance = 0.1f,
+                penColour = Color.White,
+                text = "output amplitude: ",
             };
 
+            var biasSlide = new Slide(whitePixel, _buttonTexture, SourceHeavy)
+            {
+                position = new Vector2(53 * GraphicsDevice.DisplayMode.Width / 1920, 542 * GraphicsDevice.DisplayMode.Height / 1080),
+                dimensions = new Vector2(371 * GraphicsDevice.DisplayMode.Width / 1920, 45 * GraphicsDevice.DisplayMode.Height / 1080),
+                slitWidth = 4,
+                handleWidth = 27,
+                distance = 0.1f,
+                penColour = Color.White,
+                text = "balance: ",
+            };
+
+
+            //making lists of different component types
             _gameComponent = new List<Component>()
             {
                 fourierInputText,
@@ -196,14 +215,21 @@ namespace RealTimeVisualiser
             _sliders = new List<Slide>()
             {
                 amplitudeSlide,
+                biasSlide,
             };
 
+            //initializing audio capture and graphs
             _audioIn = new audioIn(bitDepth);
             _inputGraph = new inputGraph(sampleRate,_screenDimensions, whitePixel);
             _FFTDisplay = new FastFourierTransform(_screenDimensions, whitePixel);
         }
 
      
+        /// <summary>
+        /// increases the samples analyzed by power of 2
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void moreSamplesButton_Click(object sender, EventArgs e)
         {
             if (GAMESTATE == false)
@@ -215,6 +241,11 @@ namespace RealTimeVisualiser
             }
         }
 
+        /// <summary>
+        /// decreases the number of samples analyzed by power of 2
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void lessSamplesButton_Click(object sender, EventArgs e)
         {
             if (GAMESTATE == false)
@@ -226,16 +257,32 @@ namespace RealTimeVisualiser
             }
         }
 
+        /// <summary>
+        /// not needed as value is controlled by buttons
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void fourierInputText_Click(object sender, EventArgs e)
         {
             //if (GAMESTATE == false) currentTextBox = 2;
         }
 
+        /// <summary>
+        /// selects the current text box to write in
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void timeScaleText_Click(object sender, EventArgs e)
         {
             if(GAMESTATE == false) currentTextBox = 1;
         }
 
+
+        /// <summary>
+        /// exits game
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void quitButton_Click(object sender, EventArgs e)
         {
             /*
@@ -256,14 +303,20 @@ namespace RealTimeVisualiser
         }
 
 
-
+        /// <summary>
+        /// changes game state, 
+        /// if changing to playing, all options from textboxes parsed to required data types and objects
+        /// if changing to paused, input and input graph are stopped, and audiodata re initialized
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void randomButton_Click(object sender, EventArgs e)
         {
             
             GAMESTATE = !GAMESTATE;
             _pausePlay = (GAMESTATE) ? "playing" : "paused";
-            _pausePLayTxtX = Convert.ToInt16((39 * 1920 / GraphicsDevice.DisplayMode.Width));
-            _pausePLayTxtY = 31 * 1080 / GraphicsDevice.DisplayMode.Height;
+            _pausePLayTxtX = Convert.ToInt16((39 * GraphicsDevice.DisplayMode.Width / 1920));
+            _pausePLayTxtY = 31 * GraphicsDevice.DisplayMode.Height / 1080;
             if (GAMESTATE == true)
             {
                 if (_textBoxs[0].text == "") _textBoxs[0].text = "1.0";
@@ -290,6 +343,10 @@ namespace RealTimeVisualiser
             }
         }
 
+        /// <summary>
+        /// updates all controls and graphs
+        /// </summary>
+        /// <param name="gameTime"></param>
         protected override void Update(GameTime gameTime)
         {
 
@@ -310,8 +367,7 @@ namespace RealTimeVisualiser
 
             isTyping = TryConvertKeyboardInput(_currentKeyboard, _oldKeyboard,out keyInpt);
 
-            //_drawGraphs = false;
-
+            //tries to get audio data if playing
             if (GAMESTATE == true)
             {
 
@@ -321,7 +377,7 @@ namespace RealTimeVisualiser
                 ////suspect this gap is whats causing grpah irrelugarities
 
 
-
+                //draws input graph if there is any data
                 if (_audioData != null && _audioData.Count != 0)
                 {
                     //Debug.WriteLine("test2");
@@ -329,10 +385,10 @@ namespace RealTimeVisualiser
                     var data = _inputGraph.Update(gameTime, _audioData, FFTLen, out var canFFT);
 
                     //_FFTDisplay.FFTForwardtoPoints(data);
-                    
+                    //FFTs if long enough
                     if (canFFT)
                     {
-                        _FFTDisplay.FFTForwardtoPoints(data,_sliders[0].distance);
+                        _FFTDisplay.FFTForwardtoPoints(data,_sliders[0].distance,_sliders[1].distance);
                         //_drawGraphs = true;                       
                     }
                     
@@ -340,7 +396,7 @@ namespace RealTimeVisualiser
             }
 
 
-
+            //updates textboxes
             if (currentTextBox != 0)
             {
                 if (isTyping)
@@ -373,6 +429,10 @@ namespace RealTimeVisualiser
             base.Update(gameTime);
         }
 
+        /// <summary>
+        /// draws all controls and graphs
+        /// </summary>
+        /// <param name="gameTime"></param>
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(_backColor);
