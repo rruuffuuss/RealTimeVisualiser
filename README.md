@@ -1,5 +1,5 @@
 # RealTimeVisualiser
-a spectrum analyzer that uses real time windows audio output
+A spectrum analyzer that uses real time windows audio output
 
 ![example](https://user-images.githubusercontent.com/70328797/198887706-e53ac257-89d8-4782-b3c9-b71518830d5a.png)
 
