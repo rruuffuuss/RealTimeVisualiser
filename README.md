@@ -7,4 +7,6 @@ Contains my own (inefficient) implementation of a fast fourier transform algorit
 
 Use of component classes needs work
 
+Currently, there is bug with GUI scaling and the application will only appear correctly on 1920 x 1080 monitors
+
 Graphics done using MonoGame
