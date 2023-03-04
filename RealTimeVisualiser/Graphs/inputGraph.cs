@@ -51,14 +51,11 @@ namespace RealTimeVisualiser
             //Debug.WriteLine(displayData.Count);
             for(int i = 0; i < displayData.Count; i++)
             {
-  
                 //Debug.WriteLine(displayData[i]);
                 var position = new Rectangle(Convert.ToInt32(origin.X - i * (distanceMultiplier)), Convert.ToInt32(origin.Y - (displayData[i]) * YAxisMultiplier), 1, 1);
                 _spriteBatch.Draw(_colour, position, Color.White);
                 //Debug.WriteLine(position); 
-               
-            }
-            
+            }          
         }
 
         /// <summary>
@@ -69,6 +66,9 @@ namespace RealTimeVisualiser
         /// <param name="FFTSamplesLength"></param>
         /// <param name="canFFT"></param>
         /// <returns></returns>
+
+
+        
         public Single[] Update(GameTime gameTime, List<Single> newData, int FFTSamplesLength, out bool canFFT)
         {
             
@@ -87,7 +87,7 @@ namespace RealTimeVisualiser
             canFFT = false;
             return new Single[0];
         }
-
+        
         /// <summary>
         /// sets the options for the next execution used for scaling
         /// </summary>

@@ -327,6 +327,7 @@ namespace RealTimeVisualiser
                 
 
                 inputLen = Convert.ToSingle(_textBoxs[0].text);
+
                 FFTLen = Convert.ToInt32(_textBoxs[1].text);
 
                 currentTextBox = 0;

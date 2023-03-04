@@ -48,7 +48,7 @@ namespace RealTimeVisualiser
         }
         public override void Update(GameTime gameTime)
         {
-            _currentMouse = Mouse.GetState();
+            //_currentMouse = Mouse.GetState();
             
         }
     }

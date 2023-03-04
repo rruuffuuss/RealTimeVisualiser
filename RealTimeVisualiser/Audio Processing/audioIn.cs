@@ -22,37 +22,36 @@ namespace RealTimeVisualiser
 
         // audio data pulled from OS since last frame
         public List<Single> currentData { get; set; }
-
-        public byte[] invBits;
-
         public audioIn(int bitDepth)
         {
             capture = new WasapiLoopbackCapture();
-
             _byteDepth = bitDepth / 8;
-
-            Debug.WriteLine(bitDepth);
-
+            //Debug.WriteLine(bitDepth);
             //_initInvBits();
-
             //when new audio data avialable even handler
             capture.DataAvailable += (s, a) =>
-            {                      
-                //for loop where i steps through each sample (each sample is multiple bytes)
-                for(int i = 0; i < a.BytesRecorded ; i += _byteDepth)
-                {
+            {       
+                
+                Single[] n = new Single[a.BytesRecorded / _byteDepth];
+                Buffer.BlockCopy(a.Buffer, 0, n, 0, a.BytesRecorded);
+                currentData.AddRange(n);
 
+
+                /* Very slow
+                //for loop where i steps through each sample (each sample is multiple bytes)
+                for(int i = 0; i < a.BytesRecorded; i += _byteDepth)
+                {
                     //creates new byte array with 4 bytes / 32 bits (max sample bit depth being 32 bits)
                     var _sample = new byte[_byteDepth];
-
                     //copies 1 sample from the buffer into the _sample byte array
                     Buffer.BlockCopy(a.Buffer, i, _sample,0,_byteDepth);
- 
                     // converts the sample from bytes to a single
                     var _intSample = BitConverter.ToSingle(_sample);                   
- 
                     currentData.Add(_intSample);
-                }                             
+                }     */
+
+
+
             };
         }
 

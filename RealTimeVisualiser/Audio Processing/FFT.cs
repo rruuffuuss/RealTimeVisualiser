@@ -70,7 +70,9 @@ namespace RealTimeVisualiser
                     pos0 = pos1;
                 }
             }
-            
+
+
+
         }
 
         public void FFTForwardtoPoints(Single[] samples, float amplitude, float bias)
@@ -99,7 +101,7 @@ namespace RealTimeVisualiser
 
             int n = samples.Length;
             if (n == 1) return samples;
-            else if (!IsPowerOfTwo(n)) { throw new ArgumentOutOfRangeException(); }
+            //else if (!IsPowerOfTwo(n)) { throw new ArgumentOutOfRangeException(); }
 
             //o = first root of unity for array of length n
             Complex o = Complex.Pow(Math.E, (2 * Math.PI * CONST_i) / n);
@@ -203,7 +205,7 @@ namespace RealTimeVisualiser
                 //{
                 var x = Convert.ToSingle(Xscale * Math.Sqrt(i));
                 var y = Yscale * Math.Sqrt(i * _pitchBias);
-                freqs.Add(new PointF(x, Convert.ToSingle(y * complexArray[i].Magnitude)));
+                freqs.Add(new PointF(x, Convert.ToSingle(y * complexArray[i].Imaginary)));
 
                 //freqs.Add(new PointF(Math.Abs(Convert.ToSingle(complexArray[i].Real) * Yscale), Math.Abs(Convert.ToSingle(complexArray[i].Imaginary) * Yscale)));
                 //if (complexArray[i].Imaginary > maxIm) maxIm = complexArray[i].Imaginary;
