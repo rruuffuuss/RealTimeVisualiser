@@ -96,7 +96,7 @@ namespace RealTimeVisualiser
         {
             _timeScale = timeScale;
             totalSamples = Convert.ToInt32(_sampleRate * _timeScale);
-            distanceMultiplier = axisLength.X / _sampleRate * _timeScale;
+            distanceMultiplier = axisLength.X / (_sampleRate * _timeScale);
         
         }
 
